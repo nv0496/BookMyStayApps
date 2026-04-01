@@ -1,57 +1,52 @@
 import java.util.*;
 
 /**
- * Use Case 7: Add-On Service Selection
- * Manages optional services and calculates total reservation costs.
+ * Use Case 8: Booking History & Reporting
+ * Maintains a persistent record of confirmed bookings for reporting purposes.
  */
-public class UseCase7AddOnServices {
+public class UseCase8BookingHistory {
 
-    // Map of available add-on services and their fixed prices
-    private static Map<String, Double> addOnMenu = new HashMap<>();
+    // Internal storage for booking history
+    private static List<String> historyLog = new ArrayList<>();
 
-    static {
-        addOnMenu.put("Breakfast Buffet", 500.0);
-        addOnMenu.put("Airport Pickup", 1200.0);
-        addOnMenu.put("Extra Bed", 800.0);
-        addOnMenu.put("WiFi Premium", 200.0);
+    /**
+     * History Service: Records a new entry into the log.
+     */
+    public static void recordBooking(String guestName, String roomType, double totalBill) {
+        String timestamp = new java.util.Date().toString();
+        String record = String.format("[%s] Guest: %s | Room: %s | Total: %.2f",
+                timestamp, guestName, roomType, totalBill);
+
+        // Step 1: Add record to the sequential log
+        historyLog.add(record);
+        System.out.println("History Updated: Record added for " + guestName);
     }
 
     /**
-     * Service Selector: Handles user selection and cost calculation.
+     * Reporting Service: Generates a summary of all past bookings.
      */
-    public static void processBookingWithAddOns(String guestName, String roomType, double basePrice, List<String> selectedAddOns) {
-        System.out.println("Booking Summary for: " + guestName);
-        System.out.println("Room Type: " + roomType + " | Base Price: " + basePrice);
-
-        double totalAddOnCost = 0.0;
-        System.out.println("Selected Add-Ons:");
-
-        // Step 1: Validate and add each selected service
-        for (String service : selectedAddOns) {
-            if (addOnMenu.containsKey(service)) {
-                double cost = addOnMenu.get(service);
-                totalAddOnCost += cost;
-                System.out.println("- " + service + ": " + cost);
-            } else {
-                System.out.println("- WARNING: " + service + " is not an available service.");
+    public static void generateReport() {
+        System.out.println("\n========== BOOKING HISTORY REPORT ==========");
+        if (historyLog.isEmpty()) {
+            System.out.println("No booking records found.");
+        } else {
+            // Step 2: Iterate and display historical data
+            for (String entry : historyLog) {
+                System.out.println(entry);
             }
         }
-
-        // Step 2: Calculate and display final total
-        double finalTotal = basePrice + totalAddOnCost;
-        System.out.println("Total Add-On Cost: " + totalAddOnCost);
-        System.out.println("FINAL TOTAL BILL: " + finalTotal);
-        System.out.println("-------------------------------------------\n");
+        System.out.println("============================================\n");
     }
 
     public static void main(String[] args) {
-        System.out.println("=== Add-On Service Selection System ===\n");
+        System.out.println("=== Booking History & Reporting System ===\n");
 
-        // Simulate user selecting services
-        List<String> nirmalAddOns = Arrays.asList("Breakfast Buffet", "WiFi Premium");
-        processBookingWithAddOns("Nirmal", "Suite Room", 5000.0, nirmalAddOns);
+        // Simulate successful bookings being recorded
+        recordBooking("Nirmal", "Suite Room", 5000.0);
+        recordBooking("Vivek", "Double Room", 2500.0);
+        recordBooking("Alice", "Single Room", 1500.0);
 
-        List<String> vivekAddOns = Arrays.asList("Airport Pickup", "Extra Bed", "Spa Treatment"); // Spa is invalid
-        processBookingWithAddOns("Vivek", "Double Room", 2500.0, vivekAddOns);
+        // Step 3: Admin requests a report
+        generateReport();
     }
 }
