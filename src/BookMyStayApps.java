@@ -1,51 +1,52 @@
 import java.util.*;
 
 /**
- * Use Case 10: Booking Cancellation & Inventory Rollback
- * Restores inventory counts when a confirmed reservation is cancelled.
+ * Use Case 11: Sequential Booking Promotion (Smart Billing)
+ * Applies a 10% discount if the user books more than 2 rooms.
  */
-public class UseCase10CancellationSystem {
-
-    private static Map<String, Integer> roomInventory = new HashMap<>();
-    private static Set<String> confirmedReservations = new HashSet<>();
-
-    static {
-        roomInventory.put("Single Room", 4); // Assume 1 is already booked
-        confirmedReservations.add("RES-12345"); // A sample confirmed reservation
-    }
+public class UseCase11SmartBilling {
 
     /**
-     * Cancellation Service: Validates the request and performs rollback.
+     * Billing Service: Calculates total cost with bulk discount logic.
      */
-    public static void cancelBooking(String reservationId, String roomType) {
-        System.out.println("Processing cancellation for: " + reservationId);
+    public static void calculateSmartBill(String guestName, List<Double> roomPrices) {
+        System.out.println("Generating Smart Bill for: " + guestName);
 
-        // Step 1: Validate the reservation exists
-        if (confirmedReservations.contains(reservationId)) {
-
-            // Step 2: Inventory Rollback - Increment availability
-            int currentCount = roomInventory.getOrDefault(roomType, 0);
-            roomInventory.put(roomType, currentCount + 1);
-
-            // Step 3: Remove from confirmed list
-            confirmedReservations.remove(reservationId);
-
-            System.out.println("SUCCESS: Reservation " + reservationId + " cancelled.");
-            System.out.println("Inventory Restored: " + roomType + " availability is now " + (currentCount + 1));
-        } else {
-            // Step 4: Handle invalid cancellation requests
-            System.err.println("ERROR: Reservation ID " + reservationId + " not found or already cancelled.");
+        double subtotal = 0;
+        for (double price : roomPrices) {
+            subtotal += price;
         }
+
+        int roomCount = roomPrices.size();
+        double discount = 0;
+        double finalTotal = subtotal;
+
+        // Step 1: Check for promotion eligibility (More than 2 rooms)
+        if (roomCount > 2) {
+            discount = subtotal * 0.10; // 10% Discount
+            finalTotal = subtotal - discount;
+            System.out.println("PROMOTION APPLIED: 10% Bulk Booking Discount!");
+        }
+
+        // Step 2: Display breakdown
+        System.out.println("Rooms Booked: " + roomCount);
+        System.out.println("Subtotal: " + subtotal);
+        if (discount > 0) {
+            System.out.println("Discount Amount: -" + discount);
+        }
+        System.out.println("FINAL BILLING TOTAL: " + finalTotal);
         System.out.println("-------------------------------------------\n");
     }
 
     public static void main(String[] args) {
-        System.out.println("=== Booking Cancellation & Rollback System ===\n");
+        System.out.println("=== Smart Billing & Promotion System ===\n");
 
-        // 1. Valid Cancellation
-        cancelBooking("RES-12345", "Single Room");
+        // Case 1: Standard Booking (2 rooms - No Discount)
+        List<Double> standardBooking = Arrays.asList(1500.0, 2500.0);
+        calculateSmartBill("Nirmal", standardBooking);
 
-        // 2. Invalid Cancellation (ID doesn't exist)
-        cancelBooking("RES-99999", "Double Room");
+        // Case 2: Bulk Booking (3 rooms - 10% Discount)
+        List<Double> bulkBooking = Arrays.asList(1500.0, 2500.0, 5000.0);
+        calculateSmartBill("Vivek", bulkBooking);
     }
 }
