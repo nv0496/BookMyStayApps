@@ -1,52 +1,72 @@
+import java.io.*;
 import java.util.*;
 
 /**
- * Use Case 11: Sequential Booking Promotion (Smart Billing)
- * Applies a 10% discount if the user books more than 2 rooms.
+ * Use Case 12: Data Persistence & System Recovery
+ * Ensures critical system state is saved to a durable medium.
  */
-public class UseCase11SmartBilling {
+public class UseCase12DataPersistence {
+
+    private static final String DATA_FILE = "hotel_data.txt";
+    private static Map<String, Integer> roomInventory = new HashMap<>();
+
+    static {
+        roomInventory.put("Single Room", 5);
+        roomInventory.put("Double Room", 3);
+        roomInventory.put("Suite Room", 2);
+    }
 
     /**
-     * Billing Service: Calculates total cost with bulk discount logic.
+     * Persistence Service: Saves current inventory state to a file.
      */
-    public static void calculateSmartBill(String guestName, List<Double> roomPrices) {
-        System.out.println("Generating Smart Bill for: " + guestName);
+    public static void saveState() {
+        try (PrintWriter writer = new PrintWriter(new FileWriter(DATA_FILE))) {
+            for (Map.Entry<String, Integer> entry : roomInventory.entrySet()) {
+                writer.println(entry.getKey() + ":" + entry.getValue());
+            }
+            System.out.println("SUCCESS: System state saved to " + DATA_FILE);
+        } catch (IOException e) {
+            System.err.println("ERROR: Could not save state: " + e.getMessage());
+        }
+    }
 
-        double subtotal = 0;
-        for (double price : roomPrices) {
-            subtotal += price;
+    /**
+     * Recovery Service: Loads inventory state from the file on startup.
+     */
+    public static void loadState() {
+        File file = new File(DATA_FILE);
+        if (!file.exists()) {
+            System.out.println("No previous state found. Using default inventory.");
+            return;
         }
 
-        int roomCount = roomPrices.size();
-        double discount = 0;
-        double finalTotal = subtotal;
-
-        // Step 1: Check for promotion eligibility (More than 2 rooms)
-        if (roomCount > 2) {
-            discount = subtotal * 0.10; // 10% Discount
-            finalTotal = subtotal - discount;
-            System.out.println("PROMOTION APPLIED: 10% Bulk Booking Discount!");
+        try (Scanner scanner = new Scanner(file)) {
+            while (scanner.hasNextLine()) {
+                String[] parts = scanner.nextLine().split(":");
+                if (parts.length == 2) {
+                    roomInventory.put(parts[0], Integer.parseInt(parts[1]));
+                }
+            }
+            System.out.println("SUCCESS: System state recovered from " + DATA_FILE);
+        } catch (IOException e) {
+            System.err.println("ERROR: Recovery failed: " + e.getMessage());
         }
-
-        // Step 2: Display breakdown
-        System.out.println("Rooms Booked: " + roomCount);
-        System.out.println("Subtotal: " + subtotal);
-        if (discount > 0) {
-            System.out.println("Discount Amount: -" + discount);
-        }
-        System.out.println("FINAL BILLING TOTAL: " + finalTotal);
-        System.out.println("-------------------------------------------\n");
     }
 
     public static void main(String[] args) {
-        System.out.println("=== Smart Billing & Promotion System ===\n");
+        System.out.println("=== Data Persistence & Recovery System ===\n");
 
-        // Case 1: Standard Booking (2 rooms - No Discount)
-        List<Double> standardBooking = Arrays.asList(1500.0, 2500.0);
-        calculateSmartBill("Nirmal", standardBooking);
+        // Step 1: Simulate system startup and recovery
+        loadState();
+        System.out.println("Current Inventory: " + roomInventory);
 
-        // Case 2: Bulk Booking (3 rooms - 10% Discount)
-        List<Double> bulkBooking = Arrays.asList(1500.0, 2500.0, 5000.0);
-        calculateSmartBill("Vivek", bulkBooking);
+        // Step 2: Simulate changes
+        System.out.println("\nModifying inventory (Booking a Suite)...");
+        roomInventory.put("Suite Room", roomInventory.get("Suite Room") - 1);
+
+        // Step 3: Explicitly save state before shutdown
+        saveState();
+
+        System.out.println("\nSystem shutting down. Run again to see recovered state.");
     }
 }
