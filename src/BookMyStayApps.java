@@ -2,64 +2,59 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Use Case 3: Centralized Room Inventory Management
- * Manages room availability using a centralized Map.
+ * Use Case 4: Room Search & Availability Check
+ * Implements defensive programming to ensure only available rooms are displayed.
  */
-public class UseCase3InventoryManagement {
+public class UseCase4SearchAvailability {
 
-    // Centralized inventory to track room availability
+    // Centralized inventory storage
     private static Map<String, Integer> roomInventory = new HashMap<>();
 
+    // Room details storage (Price and Size)
+    private static Map<String, String> roomDetails = new HashMap<>();
+
     static {
-        // Initializing inventory
+        // Initialize Inventory
         roomInventory.put("Single Room", 5);
-        roomInventory.put("Double Room", 3);
+        roomInventory.put("Double Room", 0); // Setting to 0 to test search filtering
         roomInventory.put("Suite Room", 2);
+
+        // Initialize Room Details
+        roomDetails.put("Single Room", "1 Bed, 250 sqft, Price: 1500.0");
+        roomDetails.put("Double Room", "2 Beds, 400 sqft, Price: 2500.0");
+        roomDetails.put("Suite Room", "3 Beds, 750 sqft, Price: 5000.0");
     }
 
     /**
-     * Checks if a specific room type is available
+     * Search Service: Handles read-only access to inventory.
+     * Filters out rooms with availability <= 0.
      */
-    public static boolean checkAvailability(String roomType) {
-        return roomInventory.getOrDefault(roomType, 0) > 0;
-    }
+    public static void performSearch() {
+        System.out.println("=== Searching for Available Rooms ===\n");
+        boolean found = false;
 
-    /**
-     * Reduces the count of a room type upon booking
-     */
-    public static void bookRoom(String roomType) {
-        if (checkAvailability(roomType)) {
-            roomInventory.put(roomType, roomInventory.get(roomType) - 1);
-            System.out.println("Booking successful for: " + roomType);
-        } else {
-            System.out.println("Sorry, " + roomType + " is currently unavailable.");
+        for (String roomType : roomInventory.keySet()) {
+            int availableCount = roomInventory.get(roomType);
+
+            // Display only room types with availability greater than zero
+            if (availableCount > 0) {
+                System.out.println("Room Type: " + roomType);
+                System.out.println("Details: " + roomDetails.get(roomType));
+                System.out.println("Available Units: " + availableCount);
+                System.out.println("-----------------------------------");
+                found = true;
+            }
+        }
+
+        if (!found) {
+            System.out.println("No rooms are currently available.");
         }
     }
 
-    public static void displayInventory() {
-        System.out.println("--- Current Room Inventory ---");
-        roomInventory.forEach((type, count) ->
-                System.out.println(type + ": " + count + " available"));
-        System.out.println("------------------------------\n");
-    }
-
     public static void main(String[] args) {
-        System.out.println("=== Hotel Inventory Management System ===\n");
+        // Step 1: User initiates a search request
+        performSearch();
 
-        displayInventory();
-
-        // Simulate booking
-        System.out.println("Attempting to book a Suite Room...");
-        bookRoom("Suite Room");
-
-        displayInventory();
-
-        System.out.println("Attempting to book another Suite Room...");
-        bookRoom("Suite Room");
-
-        System.out.println("Attempting to book a third Suite Room...");
-        bookRoom("Suite Room");
-
-        displayInventory();
+        System.out.println("\n=== End of Use Case 4 Search ===");
     }
 }
