@@ -1,59 +1,57 @@
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
- * Use Case 5: Inventory Update & Booking (Read-Write)
- * Implements the logic for updating availability after a successful booking.
+ * Use Case 7: Add-On Service Selection
+ * Manages optional services and calculates total reservation costs.
  */
-public class UseCase5BookingSystem {
+public class UseCase7AddOnServices {
 
-    // Centralized inventory
-    private static Map<String, Integer> roomInventory = new HashMap<>();
+    // Map of available add-on services and their fixed prices
+    private static Map<String, Double> addOnMenu = new HashMap<>();
 
     static {
-        roomInventory.put("Single Room", 5);
-        roomInventory.put("Double Room", 3);
-        roomInventory.put("Suite Room", 2);
+        addOnMenu.put("Breakfast Buffet", 500.0);
+        addOnMenu.put("Airport Pickup", 1200.0);
+        addOnMenu.put("Extra Bed", 800.0);
+        addOnMenu.put("WiFi Premium", 200.0);
     }
 
     /**
-     * Booking Service: Handles both reading availability and writing updates.
-     * Uses Atomic Update logic to prevent overbooking.
+     * Service Selector: Handles user selection and cost calculation.
      */
-    public static void processBooking(String guestName, String roomType) {
-        System.out.println("Processing booking for " + guestName + " (" + roomType + ")...");
+    public static void processBookingWithAddOns(String guestName, String roomType, double basePrice, List<String> selectedAddOns) {
+        System.out.println("Booking Summary for: " + guestName);
+        System.out.println("Room Type: " + roomType + " | Base Price: " + basePrice);
 
-        // Step 1: Read current availability
-        int currentAvailability = roomInventory.getOrDefault(roomType, 0);
+        double totalAddOnCost = 0.0;
+        System.out.println("Selected Add-Ons:");
 
-        if (currentAvailability > 0) {
-            // Step 2: Write update to inventory
-            roomInventory.put(roomType, currentAvailability - 1);
-
-            System.out.println("SUCCESS: Booking confirmed for " + guestName);
-            System.out.println("Updated " + roomType + " availability: " + (currentAvailability - 1));
-        } else {
-            System.out.println("FAILURE: " + roomType + " is sold out.");
+        // Step 1: Validate and add each selected service
+        for (String service : selectedAddOns) {
+            if (addOnMenu.containsKey(service)) {
+                double cost = addOnMenu.get(service);
+                totalAddOnCost += cost;
+                System.out.println("- " + service + ": " + cost);
+            } else {
+                System.out.println("- WARNING: " + service + " is not an available service.");
+            }
         }
-        System.out.println("-----------------------------------\n");
-    }
 
-    public static void displayStatus() {
-        System.out.println("=== Current Inventory Status ===");
-        roomInventory.forEach((type, count) -> System.out.println(type + ": " + count));
-        System.out.println("================================\n");
+        // Step 2: Calculate and display final total
+        double finalTotal = basePrice + totalAddOnCost;
+        System.out.println("Total Add-On Cost: " + totalAddOnCost);
+        System.out.println("FINAL TOTAL BILL: " + finalTotal);
+        System.out.println("-------------------------------------------\n");
     }
 
     public static void main(String[] args) {
-        displayStatus();
+        System.out.println("=== Add-On Service Selection System ===\n");
 
-        // Simulate a series of bookings
-        processBooking("Nirmal", "Suite Room");
-        processBooking("Vivek", "Suite Room");
+        // Simulate user selecting services
+        List<String> nirmalAddOns = Arrays.asList("Breakfast Buffet", "WiFi Premium");
+        processBookingWithAddOns("Nirmal", "Suite Room", 5000.0, nirmalAddOns);
 
-        // This third attempt should fail as Suite Rooms were only 2
-        processBooking("John", "Suite Room");
-
-        displayStatus();
+        List<String> vivekAddOns = Arrays.asList("Airport Pickup", "Extra Bed", "Spa Treatment"); // Spa is invalid
+        processBookingWithAddOns("Vivek", "Double Room", 2500.0, vivekAddOns);
     }
 }
