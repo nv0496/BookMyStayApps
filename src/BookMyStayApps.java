@@ -1,62 +1,57 @@
 import java.util.*;
 
 /**
- * Use Case 6: Reservation Confirmation & Room Allocation
- * Generates unique room IDs and prevents double-booking.
+ * Use Case 7: Add-On Service Selection
+ * Manages optional services and calculates total reservation costs.
  */
-public class UseCase6ReservationSystem {
+public class UseCase7AddOnServices {
 
-    // Centralized inventory
-    private static Map<String, Integer> roomInventory = new HashMap<>();
-
-    // Set to store allocated room IDs to ensure uniqueness
-    private static Set<String> allocatedRooms = new HashSet<>();
+    // Map of available add-on services and their fixed prices
+    private static Map<String, Double> addOnMenu = new HashMap<>();
 
     static {
-        roomInventory.put("Single Room", 5);
-        roomInventory.put("Double Room", 3);
-        roomInventory.put("Suite Room", 2);
+        addOnMenu.put("Breakfast Buffet", 500.0);
+        addOnMenu.put("Airport Pickup", 1200.0);
+        addOnMenu.put("Extra Bed", 800.0);
+        addOnMenu.put("WiFi Premium", 200.0);
     }
 
     /**
-     * Allocation Service: Checks availability, generates ID, and updates inventory.
+     * Service Selector: Handles user selection and cost calculation.
      */
-    public static void confirmReservation(String guestName, String roomType) {
-        System.out.println("Processing reservation for: " + guestName);
+    public static void processBookingWithAddOns(String guestName, String roomType, double basePrice, List<String> selectedAddOns) {
+        System.out.println("Booking Summary for: " + guestName);
+        System.out.println("Room Type: " + roomType + " | Base Price: " + basePrice);
 
-        // Step 1: Check availability
-        int currentCount = roomInventory.getOrDefault(roomType, 0);
+        double totalAddOnCost = 0.0;
+        System.out.println("Selected Add-Ons:");
 
-        if (currentCount > 0) {
-            // Step 2: Generate a unique Room ID (e.g., Suite-101)
-            String roomId = roomType.substring(0, 1).toUpperCase() + "-" + (100 + (int)(Math.random() * 900));
-
-            // Step 3: Prevent duplicate allocation
-            while (allocatedRooms.contains(roomId)) {
-                roomId = roomType.substring(0, 1).toUpperCase() + "-" + (100 + (int)(Math.random() * 900));
+        // Step 1: Validate and add each selected service
+        for (String service : selectedAddOns) {
+            if (addOnMenu.containsKey(service)) {
+                double cost = addOnMenu.get(service);
+                totalAddOnCost += cost;
+                System.out.println("- " + service + ": " + cost);
+            } else {
+                System.out.println("- WARNING: " + service + " is not an available service.");
             }
-
-            // Step 4: Atomic update of inventory and allocation list
-            roomInventory.put(roomType, currentCount - 1);
-            allocatedRooms.add(roomId);
-
-            System.out.println("CONFIRMED: " + guestName + " allocated " + roomType + " (ID: " + roomId + ")");
-            System.out.println("Remaining " + roomType + "s: " + (currentCount - 1));
-        } else {
-            System.out.println("REJECTED: No " + roomType + " available for " + guestName);
         }
+
+        // Step 2: Calculate and display final total
+        double finalTotal = basePrice + totalAddOnCost;
+        System.out.println("Total Add-On Cost: " + totalAddOnCost);
+        System.out.println("FINAL TOTAL BILL: " + finalTotal);
         System.out.println("-------------------------------------------\n");
     }
 
     public static void main(String[] args) {
-        System.out.println("=== Reservation & Allocation System ===\n");
+        System.out.println("=== Add-On Service Selection System ===\n");
 
-        // Simulate FIFO booking requests
-        confirmReservation("Nirmal", "Suite Room");
-        confirmReservation("Vivek", "Single Room");
-        confirmReservation("Alice", "Suite Room");
-        confirmReservation("Bob", "Suite Room"); // This should fail
+        // Simulate user selecting services
+        List<String> nirmalAddOns = Arrays.asList("Breakfast Buffet", "WiFi Premium");
+        processBookingWithAddOns("Nirmal", "Suite Room", 5000.0, nirmalAddOns);
 
-        System.out.println("Total Rooms Allocated: " + allocatedRooms);
+        List<String> vivekAddOns = Arrays.asList("Airport Pickup", "Extra Bed", "Spa Treatment"); // Spa is invalid
+        processBookingWithAddOns("Vivek", "Double Room", 2500.0, vivekAddOns);
     }
 }
