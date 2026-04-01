@@ -2,59 +2,58 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Use Case 4: Room Search & Availability Check
- * Implements defensive programming to ensure only available rooms are displayed.
+ * Use Case 5: Inventory Update & Booking (Read-Write)
+ * Implements the logic for updating availability after a successful booking.
  */
-public class UseCase4SearchAvailability {
+public class UseCase5BookingSystem {
 
-    // Centralized inventory storage
+    // Centralized inventory
     private static Map<String, Integer> roomInventory = new HashMap<>();
 
-    // Room details storage (Price and Size)
-    private static Map<String, String> roomDetails = new HashMap<>();
-
     static {
-        // Initialize Inventory
         roomInventory.put("Single Room", 5);
-        roomInventory.put("Double Room", 0); // Setting to 0 to test search filtering
+        roomInventory.put("Double Room", 3);
         roomInventory.put("Suite Room", 2);
-
-        // Initialize Room Details
-        roomDetails.put("Single Room", "1 Bed, 250 sqft, Price: 1500.0");
-        roomDetails.put("Double Room", "2 Beds, 400 sqft, Price: 2500.0");
-        roomDetails.put("Suite Room", "3 Beds, 750 sqft, Price: 5000.0");
     }
 
     /**
-     * Search Service: Handles read-only access to inventory.
-     * Filters out rooms with availability <= 0.
+     * Booking Service: Handles both reading availability and writing updates.
+     * Uses Atomic Update logic to prevent overbooking.
      */
-    public static void performSearch() {
-        System.out.println("=== Searching for Available Rooms ===\n");
-        boolean found = false;
+    public static void processBooking(String guestName, String roomType) {
+        System.out.println("Processing booking for " + guestName + " (" + roomType + ")...");
 
-        for (String roomType : roomInventory.keySet()) {
-            int availableCount = roomInventory.get(roomType);
+        // Step 1: Read current availability
+        int currentAvailability = roomInventory.getOrDefault(roomType, 0);
 
-            // Display only room types with availability greater than zero
-            if (availableCount > 0) {
-                System.out.println("Room Type: " + roomType);
-                System.out.println("Details: " + roomDetails.get(roomType));
-                System.out.println("Available Units: " + availableCount);
-                System.out.println("-----------------------------------");
-                found = true;
-            }
+        if (currentAvailability > 0) {
+            // Step 2: Write update to inventory
+            roomInventory.put(roomType, currentAvailability - 1);
+
+            System.out.println("SUCCESS: Booking confirmed for " + guestName);
+            System.out.println("Updated " + roomType + " availability: " + (currentAvailability - 1));
+        } else {
+            System.out.println("FAILURE: " + roomType + " is sold out.");
         }
+        System.out.println("-----------------------------------\n");
+    }
 
-        if (!found) {
-            System.out.println("No rooms are currently available.");
-        }
+    public static void displayStatus() {
+        System.out.println("=== Current Inventory Status ===");
+        roomInventory.forEach((type, count) -> System.out.println(type + ": " + count));
+        System.out.println("================================\n");
     }
 
     public static void main(String[] args) {
-        // Step 1: User initiates a search request
-        performSearch();
+        displayStatus();
 
-        System.out.println("\n=== End of Use Case 4 Search ===");
+        // Simulate a series of bookings
+        processBooking("Nirmal", "Suite Room");
+        processBooking("Vivek", "Suite Room");
+
+        // This third attempt should fail as Suite Rooms were only 2
+        processBooking("John", "Suite Room");
+
+        displayStatus();
     }
 }
