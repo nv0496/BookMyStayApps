@@ -1,14 +1,16 @@
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
- * Use Case 5: Inventory Update & Booking (Read-Write)
- * Implements the logic for updating availability after a successful booking.
+ * Use Case 6: Reservation Confirmation & Room Allocation
+ * Generates unique room IDs and prevents double-booking.
  */
-public class UseCase5BookingSystem {
+public class UseCase6ReservationSystem {
 
     // Centralized inventory
     private static Map<String, Integer> roomInventory = new HashMap<>();
+
+    // Set to store allocated room IDs to ensure uniqueness
+    private static Set<String> allocatedRooms = new HashSet<>();
 
     static {
         roomInventory.put("Single Room", 5);
@@ -17,43 +19,44 @@ public class UseCase5BookingSystem {
     }
 
     /**
-     * Booking Service: Handles both reading availability and writing updates.
-     * Uses Atomic Update logic to prevent overbooking.
+     * Allocation Service: Checks availability, generates ID, and updates inventory.
      */
-    public static void processBooking(String guestName, String roomType) {
-        System.out.println("Processing booking for " + guestName + " (" + roomType + ")...");
+    public static void confirmReservation(String guestName, String roomType) {
+        System.out.println("Processing reservation for: " + guestName);
 
-        // Step 1: Read current availability
-        int currentAvailability = roomInventory.getOrDefault(roomType, 0);
+        // Step 1: Check availability
+        int currentCount = roomInventory.getOrDefault(roomType, 0);
 
-        if (currentAvailability > 0) {
-            // Step 2: Write update to inventory
-            roomInventory.put(roomType, currentAvailability - 1);
+        if (currentCount > 0) {
+            // Step 2: Generate a unique Room ID (e.g., Suite-101)
+            String roomId = roomType.substring(0, 1).toUpperCase() + "-" + (100 + (int)(Math.random() * 900));
 
-            System.out.println("SUCCESS: Booking confirmed for " + guestName);
-            System.out.println("Updated " + roomType + " availability: " + (currentAvailability - 1));
+            // Step 3: Prevent duplicate allocation
+            while (allocatedRooms.contains(roomId)) {
+                roomId = roomType.substring(0, 1).toUpperCase() + "-" + (100 + (int)(Math.random() * 900));
+            }
+
+            // Step 4: Atomic update of inventory and allocation list
+            roomInventory.put(roomType, currentCount - 1);
+            allocatedRooms.add(roomId);
+
+            System.out.println("CONFIRMED: " + guestName + " allocated " + roomType + " (ID: " + roomId + ")");
+            System.out.println("Remaining " + roomType + "s: " + (currentCount - 1));
         } else {
-            System.out.println("FAILURE: " + roomType + " is sold out.");
+            System.out.println("REJECTED: No " + roomType + " available for " + guestName);
         }
-        System.out.println("-----------------------------------\n");
-    }
-
-    public static void displayStatus() {
-        System.out.println("=== Current Inventory Status ===");
-        roomInventory.forEach((type, count) -> System.out.println(type + ": " + count));
-        System.out.println("================================\n");
+        System.out.println("-------------------------------------------\n");
     }
 
     public static void main(String[] args) {
-        displayStatus();
+        System.out.println("=== Reservation & Allocation System ===\n");
 
-        // Simulate a series of bookings
-        processBooking("Nirmal", "Suite Room");
-        processBooking("Vivek", "Suite Room");
+        // Simulate FIFO booking requests
+        confirmReservation("Nirmal", "Suite Room");
+        confirmReservation("Vivek", "Single Room");
+        confirmReservation("Alice", "Suite Room");
+        confirmReservation("Bob", "Suite Room"); // This should fail
 
-        // This third attempt should fail as Suite Rooms were only 2
-        processBooking("John", "Suite Room");
-
-        displayStatus();
+        System.out.println("Total Rooms Allocated: " + allocatedRooms);
     }
 }
