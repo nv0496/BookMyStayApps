@@ -1,52 +1,68 @@
 import java.util.*;
 
 /**
- * Use Case 8: Booking History & Reporting
- * Maintains a persistent record of confirmed bookings for reporting purposes.
+ * Use Case 9: Error Handling & Validation
+ * Implements defensive programming and custom error messaging.
  */
-public class UseCase8BookingHistory {
+public class UseCase9ErrorHandling {
 
-    // Internal storage for booking history
-    private static List<String> historyLog = new ArrayList<>();
+    private static Map<String, Integer> roomInventory = new HashMap<>();
 
-    /**
-     * History Service: Records a new entry into the log.
-     */
-    public static void recordBooking(String guestName, String roomType, double totalBill) {
-        String timestamp = new java.util.Date().toString();
-        String record = String.format("[%s] Guest: %s | Room: %s | Total: %.2f",
-                timestamp, guestName, roomType, totalBill);
-
-        // Step 1: Add record to the sequential log
-        historyLog.add(record);
-        System.out.println("History Updated: Record added for " + guestName);
+    static {
+        roomInventory.put("Single Room", 5);
     }
 
     /**
-     * Reporting Service: Generates a summary of all past bookings.
+     * Validator Service: Checks for nulls, empty strings, and logic errors.
      */
-    public static void generateReport() {
-        System.out.println("\n========== BOOKING HISTORY REPORT ==========");
-        if (historyLog.isEmpty()) {
-            System.out.println("No booking records found.");
-        } else {
-            // Step 2: Iterate and display historical data
-            for (String entry : historyLog) {
-                System.out.println(entry);
+    public static void validateAndBook(String guestName, String roomType) {
+        System.out.println("Initiating booking for: " + (guestName == null ? "NULL" : guestName));
+
+        try {
+            // Step 1: Input Validation
+            if (guestName == null || guestName.trim().isEmpty()) {
+                throw new IllegalArgumentException("ERROR: Guest name cannot be empty.");
             }
+
+            if (!roomInventory.containsKey(roomType)) {
+                throw new NoSuchElementException("ERROR: Room type '" + roomType + "' does not exist.");
+            }
+
+            // Step 2: System State Validation
+            int available = roomInventory.get(roomType);
+            if (available <= 0) {
+                throw new IllegalStateException("ERROR: No availability for " + roomType);
+            }
+
+            // Process booking if all validations pass
+            roomInventory.put(roomType, available - 1);
+            System.out.println("SUCCESS: Booking confirmed for " + guestName);
+
+        } catch (IllegalArgumentException | NoSuchElementException | IllegalStateException e) {
+            // Step 3: Precise Error Messaging
+            System.err.println(e.getMessage());
+        } catch (Exception e) {
+            // Generic fallback for unexpected failures
+            System.err.println("CRITICAL ERROR: An unexpected system failure occurred.");
+        } finally {
+            System.out.println("Validation process complete.\n");
         }
-        System.out.println("============================================\n");
     }
 
     public static void main(String[] args) {
-        System.out.println("=== Booking History & Reporting System ===\n");
+        System.out.println("=== Error Handling & Validation System ===\n");
 
-        // Simulate successful bookings being recorded
-        recordBooking("Nirmal", "Suite Room", 5000.0);
-        recordBooking("Vivek", "Double Room", 2500.0);
-        recordBooking("Alice", "Single Room", 1500.0);
+        // 1. Test Valid Input
+        validateAndBook("Nirmal", "Single Room");
 
-        // Step 3: Admin requests a report
-        generateReport();
+        // 2. Test Empty Name
+        validateAndBook("", "Single Room");
+
+        // 3. Test Invalid Room Type
+        validateAndBook("Vivek", "Penthouse");
+
+        // 4. Test Out of Stock
+        roomInventory.put("Single Room", 0);
+        validateAndBook("John", "Single Room");
     }
 }
